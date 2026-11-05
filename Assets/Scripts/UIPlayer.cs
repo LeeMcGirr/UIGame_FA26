@@ -3,9 +3,13 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
+using UnityEngine.UIElements;
 
 public class UIPlayer : MonoBehaviour
 {
+    public static UIPlayer _playerInstance;
+
+
     //general player vars
     public int money = 10;
     public float health = 100;
@@ -16,6 +20,10 @@ public class UIPlayer : MonoBehaviour
     //see the money text example in update for this in practice
     public TMP_InputField nameInput;
     public TextMeshProUGUI moneyText;
+    public TextMeshProUGUI healthText;
+
+    public List<GameObject> dealers;
+    public GameObject dealerPanel;
 
     //statuses
     public bool poisoned;
@@ -36,8 +44,18 @@ public class UIPlayer : MonoBehaviour
 
     public void Awake()
     {
-        myInventory = new string[5];
+        if (_playerInstance == null)
+        {
+            _playerInstance = this;
+        }
+        else
+        {
+            Destroy(this.gameObject);
+        }
 
+        Debug.Log("player instance has been registered: " +  _playerInstance.gameObject.GetEntityId());
+
+        myInventory = new string[5];
         //this line of code preserves the gameobject through scene changes --------------------
         DontDestroyOnLoad(this.gameObject);
         //needed for player, gamemanager, audiomanager etc!
@@ -46,14 +64,39 @@ public class UIPlayer : MonoBehaviour
     public void Start()
     {
         Debug.Log("player initialized");
+
+        //first find the gameobject you're looking for - in whatever way is best for you
+        //quick name check
+        GameObject healthBar = GameObject.Find("Health");
+        //if the gameobject exists, then we can look for any components we want
+        if(healthBar != null )
+        {
+            //if we're not sure a component will be found, or if a component is only likely
+            //to be attached to the gameobject SOME of the time
+            //TryGet returns a bool that is true when the component exists
+            //it also sends out the component using an out parameter
+            if(TryGetComponent<TextMeshProUGUI>(out TextMeshProUGUI tmpHealth))
+            {
+                //set our variable
+                healthText = tmpHealth;
+            }
+            //we can write better error reports using this process as well
+            else { Debug.Log("HEALTH TEXT NOT FOUND IN SCENE: " + SceneManager.GetActiveScene().name); }
+        }
     }
 
 
     public void Update()
     {
+        //checking to see if something is null or not before updating
         if(moneyText != null)
         {
             moneyText.text = "Money: " + money;
+        }
+
+        if (healthText != null)
+        {
+            healthText.text = "Health: " + health.ToString();
         }
     }
 
